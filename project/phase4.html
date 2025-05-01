@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mammography analysis Tool </title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="style.css"rel="stylesheet">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+    </head>
+    
+<body>
+
+     <!-- Guide Modal -->
+     <div id="guideModal" class="guide-modal">
+        <div class="guide-content">
+            <h2>Welcome to the Mammography Analysis Tool</h2>
+            <p>To get started, please follow these steps:</p>
+            <p>1. Prepare a mammography image that has been taken from the lightbox or the origine file</p>
+            <p>2. Crop your mammography image to remove any extra information like name, date, etc.</p>
+            <p>3. better to use a system with 15-30 inches screen size.</p>
+            <button onclick="closeGuide()">Got it!</button>
+            <button onclick="helpvideo()">how to use!</button>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Upload your full cropped mammography</h1>
+        <div class="upload-btn-wrapper">
+            <label for="file-upload" class="upload-button">Choose an Image</label>
+            <input type="file" id="file-upload" accept="image/*" onchange="previewAndResizeImage()">
+        </div>
+    
+        <div id="image-container" class="image-container"></div>
+        <p id="message" class="message">Select an image to preview it here.</p>
+    
+        <!-- Classification Button -->
+        <button id="classificationBtn" class="classification-btn" onclick="classificationAction()">mask.detection</button>
+        
+
+         <!-- Circular Button -->
+    <button id="circularBtn" class="circular-btn" onclick="circularButtonAction()">
+        <span class="material-icons"><i class="material-icons">calculate</i></span>
+    </button>
+    
+        <!-- Mass Button -->
+        <button id="massBtn" class="mass-btn" onclick="massAction()">mask.analysis.</button>
+    
+      <!-- Detector Button -->
+    <button id="detectorBtn" class="detector-btn" style="display: none;" onclick="detectorAction()">
+        <span class="material-icons"><i class="material-icons">margin</i></span>
+    </button>
+    
+           
+
+    <button id="analyzebtn" class="analyze-btn" onclick="analyzeButtonAction()">
+        <span class="material-icons"><i class="material-icons">pivot_table_chart</i></span>
+    </button>
+
+
+    </div>
+    
+
+
+    
+    <!-- Modal and Backdrop -->
+    <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+    <div class="modal" id="massModal">
+        <button onclick="calcDetAction()">calc.det</button>
+        <button onclick="massDetAction()">mass.det</button>
+    </div>
+    <!--this part is for the process loader in order to put the user in a deal as a programs current function-->
+    <div id="loader" class="loader-overlay" style="display: none;">
+        <div class="loader-spinner"></div>
+        <p>Analyzing... Please wait.</p>
+    </div>
+      
+
+   
+    
+    <script>
+
+        // Show the guide modal when the page loads
+        window.onload = function() {
+            document.getElementById('guideModal').style.display = 'flex';
+        };
+
+        function helpvideo() {
+
+            window.location.href = 'play.html'; // Redirect to فاز چهارم.html
+            
+        }
+
+        // Function to close the guide modal
+        function closeGuide() {
+            document.getElementById('guideModal').style.display = 'none';
+        }
+        let originalImage = null;
+        let resizedImageUrl = null;
+    
+        function previewAndResizeImage() {
+        const file = document.getElementById('file-upload').files[0];
+        const reader = new FileReader();
+    
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+    
+                const targetWidth = 400;
+                const targetHeight = 400;
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+    
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+    
+                resizedImageUrl = canvas.toDataURL('image/png');
+                originalImage = img;
+    
+                const imageContainer = document.getElementById('image-container');
+                imageContainer.innerHTML = `<img src="${resizedImageUrl}" class="image-preview">`;
+    
+                // Show buttons after the image is uploaded
+                document.getElementById('classificationBtn').style.display = 'inline-block';
+                document.getElementById('massBtn').style.display = 'inline-block';
+                document.getElementById('detectorBtn').style.display = 'inline-block'; // Show the detector button
+                document.getElementById('circularBtn').style.display = 'flex'; // Correct display for circular button
+                document.getElementById('analyzebtn').style.display = 'inline-block'; // Make "Analyze" button visible
+
+    
+                document.getElementById('message').textContent = 'Your image is resized to 400x400 pixels!';
+            };
+    
+            img.src = e.target.result;
+        };
+    
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    
+    
+    function classificationAction() {
+    if (!originalImage) {
+        alert("Please upload an image first.");
+        return;
+    }
+
+    const brightnessThresholds = [100, 120, 140, 164, 184, 204, 214];
+    const imageContainer = document.getElementById('image-container');
+    imageContainer.innerHTML = ''; // Clear existing images
+
+    brightnessThresholds.forEach(threshold => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Ensure all images are resized to 400x400
+        const targetWidth = 400;
+        const targetHeight = 400;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        // Draw the original image resized to 400x400 on the canvas
+        ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+
+        // Get the resized image data from the canvas
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Apply the brightness threshold to create the classification mask
+        for (let i = 0; i < data.length; i += 4) {
+            const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            if (brightness >= threshold) {
+                data[i] = 255;     // Red
+                data[i + 1] = 255; // Green
+                data[i + 2] = 255; // Blue
+            }
+        }
+
+        // Update the canvas with the modified image data
+        ctx.putImageData(imageData, 0, 0);
+
+        // Create an image element to display the resized and processed image
+        const imgElement = document.createElement('img');
+        imgElement.src = canvas.toDataURL();
+        imgElement.className = 'image-preview';
+        imgElement.alt = `Brightness Mask ${threshold}`;
+
+        // Add the resized and processed image to the container
+        imageContainer.appendChild(imgElement);
+    });
+
+    // Update the message
+    document.getElementById('message').textContent =
+        'Classification masks applied with thresholds: ' + brightnessThresholds.join(', ') + '. Images resized to 400x400.';
+}
+
+
+
+
+
+function drawGraph(percentages, targetIndex) {
+    const labels = [];
+    const data = [];
+
+    const endIndex = targetIndex !== -1 ? targetIndex : percentages.length;
+
+    for (let i = 0; i < endIndex; i++) {
+        labels.push(`Image ${i + 1}`);
+        data.push(percentages[i]);
+    }
+
+    // Calculate the slopes between consecutive points
+    const slopes = [];
+    for (let i = 1; i < data.length; i++) {
+        const slope = (data[i] - data[i - 1]) / (i - (i - 1)); // Δy / Δx
+        slopes.push(slope.toFixed(2)); // Save the slope with 2 decimal precision
+    }
+
+    // Calculate the average slope
+    const averageSlope = slopes.length > 0 
+        ? (slopes.reduce((sum, slope) => sum + parseFloat(slope), 0) / slopes.length).toFixed(2)
+        : 0;
+
+    // Calculate the linear line connecting the start and end points
+    const startValue = data[0];
+    const endValue = data[data.length - 1];
+    const linearLine = [];
+    for (let i = 0; i < data.length; i++) {
+        const fraction = i / (data.length - 1);
+        linearLine.push(startValue + fraction * (endValue - startValue));
+    }
+
+    // Check if the majority of the data points are above or below the linear line
+    let aboveCount = 0;
+    let belowCount = 0;
+
+    data.forEach((value, index) => {
+        if (value > linearLine[index]) {
+            aboveCount++;
+        } else {
+            belowCount++;
+        }
+    });
+
+    const majorityPosition = aboveCount > belowCount ? "above" : "below";
+
+    // Check if the majority of the heights of data points is above/below the linear line
+    const dataSum = data.reduce((sum, value) => sum + value, 0);
+    const linearLineSum = linearLine.reduce((sum, value) => sum + value, 0);
+
+    const dataAverage = dataSum / data.length;
+    const linearLineAverage = linearLineSum / linearLine.length;
+
+    const heightComparison =
+        dataAverage > linearLineAverage ? "above" : "below";
+
+    // Create or update the chart container
+    let chartContainer = document.getElementById('chart-container');
+    if (!chartContainer) {
+        chartContainer = document.createElement('div');
+        chartContainer.id = 'chart-container';
+        document.querySelector('.container').appendChild(chartContainer);
+    }
+
+    chartContainer.innerHTML = ''; // Clear the chart container
+
+    // Create a canvas for the graph
+    const canvas = document.createElement('canvas');
+    chartContainer.appendChild(canvas);
+
+    // Draw the graph using Chart.js
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'White Percentage (%)',
+                    data: data,
+                    borderColor: 'rgba(54, 162, 235, 1)', // Blue color
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Light blue color
+                    borderWidth: 2,
+                    tension: 0.4,
+                },
+                {
+                    label: 'Connecting Line (Start to End)',
+                    data: linearLine,
+                    borderColor: 'rgba(255, 0, 0, 1)', // Red color
+                    backgroundColor: 'rgba(255, 0, 0, 0.2)', // Light red color
+                    borderWidth: 1,
+                    borderDash: [5, 5],
+                },
+            ],
+        },
+        options: {
+            responsive: true, // Make the chart responsive
+            maintainAspectRatio: false, // Allow the chart to stretch to fit the container
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Percentage Changes of White Masks & Connecting Line',
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Image Index',
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)', // Light gray grid lines for the x-axis
+                    },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'White Percentage (%)',
+                    },
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)', // Light gray grid lines for the y-axis
+                    },
+                },
+            },
+            // Set the background color of the chart to white
+            plugins: {
+                background: {
+                    color: 'white', // Set the background color to white
+                },
+            },
+        },
+    });
+
+    // Display the majority position, the average slope, and the height comparison in the message container
+    const messageContainer = document.getElementById('message');
+    messageContainer.textContent += ` Average Slope: ${averageSlope}.  The majority height of the data graph is ${heightComparison} the connecting line graph.`;
+}
+ 
+
+
+ 
+function massAction() {
+    if (!originalImage) {
+        alert("Please upload an image and apply classification first.");
+        return;
+    }
+
+    const imagePreviews = document.querySelectorAll('.image-preview');
+    if (imagePreviews.length === 0) {
+        alert("No  masks found. Please run the calssi.mass first.");
+        return;
+    }
+
+    const percentages = [];
+    let targetIndex = -1;
+    let previousSurface = null;
+
+    imagePreviews.forEach((imgElement, index) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = imgElement.src;
+
+        img.onload = function () {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            let whitePixelCount = 0;
+            let nonBlackPixelCount = 0;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                if (r !== 0 || g !== 0 || b !== 0) {
+                    nonBlackPixelCount++;
+                    if (r === 255 && g === 255 && b === 255) {
+                        whitePixelCount++;
+                    }
+                }
+            }
+
+            const whitePercentage = ((whitePixelCount / nonBlackPixelCount) * 100).toFixed(2);
+            percentages.push(Number(whitePercentage));
+
+            if (whitePercentage < 1 && targetIndex === -1) {
+                targetIndex = index;
+            }
+
+            if (percentages.length === imagePreviews.length) {
+                if (targetIndex !== -1) {
+                    const previousIndex = targetIndex - 2;
+                    if (previousIndex >= 0) {
+                        previousSurface = percentages[previousIndex];
+                        const messageContainer = document.getElementById('message');
+                        messageContainer.textContent = `surface= ${previousSurface}%.`;
+                    } else {
+                        alert("the program may make mistake in this case pay attention to the report ");
+                    }
+                } else {
+                    const lastThree = percentages.slice(-3);
+                    const averageSurface = (lastThree.reduce((sum, val) => sum + val, 0) / lastThree.length).toFixed(2);
+                    previousSurface = averageSurface;
+                    const messageContainer = document.getElementById('message');
+                    messageContainer.textContent = `surface= ${averageSurface}%.`;
+                }
+
+                // Calculate the difference between whitePercentage and previousSurface for each image
+                const differences = percentages.map((percentage) => Math.abs(percentage - previousSurface));
+
+                // Find the image with the smallest difference
+                const minDifferenceIndex = differences.indexOf(Math.min(...differences));
+
+                // Remove the white mask for the image with the smallest difference
+                const imageToRemoveMask = imagePreviews[minDifferenceIndex];
+                const canvasToRemoveMask = document.createElement('canvas');
+                const ctxToRemoveMask = canvasToRemoveMask.getContext('2d');
+                const imgToRemoveMask = new Image();
+                imgToRemoveMask.src = imageToRemoveMask.src;
+
+                imgToRemoveMask.onload = function () {
+                    canvasToRemoveMask.width = imgToRemoveMask.width;
+                    canvasToRemoveMask.height = imgToRemoveMask.height;
+                    ctxToRemoveMask.drawImage(imgToRemoveMask, 0, 0);
+
+                    const imageDataToRemoveMask = ctxToRemoveMask.getImageData(0, 0, canvasToRemoveMask.width, canvasToRemoveMask.height);
+                    const dataToRemoveMask = imageDataToRemoveMask.data;
+
+                    for (let i = 0; i < dataToRemoveMask.length; i += 4) {
+                        if (dataToRemoveMask[i] === 255 && dataToRemoveMask[i + 1] === 255 && dataToRemoveMask[i + 2] === 255) {
+                            dataToRemoveMask[i + 3] = 0; // Set alpha to 0 (transparent) to remove the white mask
+                        }
+                    }
+
+                    ctxToRemoveMask.putImageData(imageDataToRemoveMask, 0, 0);
+                    imageToRemoveMask.src = canvasToRemoveMask.toDataURL();
+                };
+
+                drawGraph(percentages, targetIndex);
+            }
+        };
+    });
+}
+   
+        
+        function detectorAction() {
+        if (!originalImage) {
+            alert("Please upload an image and apply calssi.mass first.");
+            return;
+        }
+    
+        // Select all image-preview elements created during classification
+        const imagePreviews = document.querySelectorAll('.image-preview');
+    
+        if (imagePreviews.length === 0) {
+            alert("No classification masks found. Please run the classi.mass first.");
+            return;
+        }
+    
+        // Process each classified image
+        imagePreviews.forEach((imgElement) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+    
+            // Set canvas dimensions to match the image
+            const img = new Image();
+            img.src = imgElement.src;
+    
+            img.onload = function () {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+    
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+    
+                // Clone the pixel data for processing
+                const newImageData = ctx.createImageData(canvas.width, canvas.height);
+                const newData = newImageData.data;
+    
+                // Loop through each pixel to detect white regions and their margins
+                for (let y = 0; y < canvas.height; y++) {
+                    for (let x = 0; x < canvas.width; x++) {
+                        const idx = (y * canvas.width + x) * 4;
+    
+                        const isWhite =
+                            data[idx] === 255 &&
+                            data[idx + 1] === 255 &&
+                            data[idx + 2] === 255;
+    
+                        if (isWhite) {
+                            // Check neighboring pixels to see if this pixel is at the boundary
+                            const neighbors = [
+                                [-1, 0], // Left
+                                [1, 0],  // Right
+                                [0, -1], // Top
+                                [0, 1],  // Bottom
+                            ];
+    
+                            let isBoundary = false;
+                            for (const [dx, dy] of neighbors) {
+                                const nx = x + dx;
+                                const ny = y + dy;
+    
+                                if (
+                                    nx >= 0 &&
+                                    nx < canvas.width &&
+                                    ny >= 0 &&
+                                    ny < canvas.height
+                                ) {
+                                    const neighborIdx = (ny * canvas.width + nx) * 4;
+                                    const neighborIsWhite =
+                                        data[neighborIdx] === 255 &&
+                                        data[neighborIdx + 1] === 255 &&
+                                        data[neighborIdx + 2] === 255;
+    
+                                    if (!neighborIsWhite) {
+                                        isBoundary = true;
+                                        break;
+                                    }
+                                }
+                            }
+    
+                            if (isBoundary) {
+                                newData[idx] = 255;     // Red
+                                newData[idx + 1] = 0;   // Green
+                                newData[idx + 2] = 0;   // Blue
+                                newData[idx + 3] = 255; // Alpha
+                            } else {
+                                newData[idx] = data[idx];
+                                newData[idx + 1] = data[idx + 1];
+                                newData[idx + 2] = data[idx + 2];
+                                newData[idx + 3] = data[idx + 3];
+                            }
+                        } else {
+                            newData[idx] = data[idx];
+                            newData[idx + 1] = data[idx + 1];
+                            newData[idx + 2] = data[idx + 2];
+                            newData[idx + 3] = data[idx + 3];
+                        }
+                    }
+                }
+    
+                // Update the canvas with the new image data
+                ctx.putImageData(newImageData, 0, 0);
+    
+                // Update the corresponding image element's src
+                imgElement.src = canvas.toDataURL();
+            };
+        });
+    
+        // Update the message
+        document.getElementById('message').textContent =
+            'Red margins detected and displayed on all classified masks.';
+    }
+    
+    function circularButtonAction() {
+    if (!originalImage) {
+        alert("Please upload an image and apply classi.mass first.");
+        return;
+    }
+
+    const imagePreviews = document.querySelectorAll('.image-preview');
+    if (imagePreviews.length === 0) {
+        alert("No classification masks found. Please run the classi.mass first.");
+        return;
+    }
+
+    const dpi = 96; // Dots per inch for the images
+
+    // Clear the image container to re-render images with labels
+    const imageContainer = document.getElementById('image-container');
+    const labeledImages = [];
+
+    imagePreviews.forEach((imgElement, index) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = imgElement.src;
+
+        img.onload = function () {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Variables to count white and non-black pixels
+            let whitePixelCount = 0;
+            let nonBlackPixelCount = 0;
+
+            // Process the image data
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                // Remove black pixels (#000000)
+                if (r <= 5 && g <= 5 && b <= 5) {
+                    data[i + 3] = 0; // Set alpha to 0 (transparent)
+                } else {
+                    nonBlackPixelCount++; // Count non-black pixels
+                    if (r === 255 && g === 255 && b === 255) {
+                        whitePixelCount++; // Count white pixels
+                    }
+                }
+            }
+
+            // Update the canvas with the modified image data
+            ctx.putImageData(imageData, 0, 0);
+
+            // Calculate the percentage of white pixels
+            const whitePercentage = ((whitePixelCount / nonBlackPixelCount) * 100).toFixed(2);
+
+            // Create a container for the labeled image
+            const labeledContainer = document.createElement('div');
+            labeledContainer.className = 'labeled-image-container';
+
+            // Create and style the label
+            const label = document.createElement('div');
+            label.className = 'image-label';
+            label.textContent = `White Mask: ${whitePercentage}%`;
+
+            // Add label and modified image to the container
+            labeledContainer.appendChild(label);
+            const modifiedImg = new Image();
+            modifiedImg.src = canvas.toDataURL();
+            modifiedImg.className = 'image-preview';
+            labeledContainer.appendChild(modifiedImg);
+
+            labeledImages.push(labeledContainer);
+
+            // Once all images are processed, render them
+            if (labeledImages.length === imagePreviews.length) {
+                imageContainer.innerHTML = ''; // Clear existing content
+                labeledImages.forEach((container) => {
+                    imageContainer.appendChild(container);
+                });
+            }
+        };
+    });
+}
+
+async function analyzeButtonAction() {
+    const fileInput = document.getElementById("file-upload");
+    if (!fileInput.files.length) {
+        alert("Please upload an image first.");
+        return;
+    }
+
+    const fileName = fileInput.files[0].name;  
+    const messageContent = document.getElementById("message").textContent.trim();
+    const loader = document.getElementById("loader");
+    loader.style.display = "flex";  // Show loader
+
+    const maskPosition = await detectMaskPosition();
+
+    if (!messageContent || messageContent === "Select an image to preview it here.") {
+        loader.style.display = "none";
+        alert("No meaningful message found. Please upload and process an image first.");
+        return;
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                message: messageContent,
+                file_name: fileName,
+                mask_position: maskPosition
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch analysis results");
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'analysis_results.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        document.getElementById("message").textContent = "Analysis complete. File downloaded as analysis_results.txt.";
+
+    } catch (error) {
+        console.error("Error during analysis:", error);
+        alert("An error occurred during analysis. Please try again.");
+    } finally {
+        loader.style.display = "none";  // Hide loader after process ends
+    }
+}
+
+
+
+// Function to detect mask position based on processed images
+async function detectMaskPosition() {
+    const imagePreviews = document.querySelectorAll('.image-preview');
+
+    if (imagePreviews.length === 0) {
+        console.warn("No processed images found.");
+        return "No mask detected";
+    }
+
+    let detectedPosition = "Unknown";
+
+    for (const img of imagePreviews) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const imgElement = new Image();
+        imgElement.src = img.src;
+
+        await new Promise((resolve) => {
+            imgElement.onload = function () {
+                canvas.width = imgElement.width;
+                canvas.height = imgElement.height;
+                ctx.drawImage(imgElement, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                let xSum = 0, ySum = 0, count = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    const x = (i / 4) % canvas.width;
+                    const y = Math.floor((i / 4) / canvas.width);
+
+                    // If it's a white mask pixel (detected lesion)
+                    if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+                        xSum += x;
+                        ySum += y;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    const avgX = xSum / count;
+                    const avgY = ySum / count;
+
+                    // Define breast quadrants based on centroid position
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+
+                    const horizontalZone = avgX < centerX * 0.4 ? "Far Inner" :
+                                          avgX < centerX ? "Inner" :
+                                          avgX < centerX * 1.6 ? "Outer" : "Far Outer";
+
+                    const verticalZone = avgY < centerY * 0.4 ? "Far Upper" :
+                                         avgY < centerY ? "Upper" :
+                                         avgY < centerY * 1.6 ? "Lower" : "Far Lower";
+
+                    // Special case: Central Region (Near the Nipple)
+                    const distanceToCenter = Math.sqrt((avgX - centerX) ** 2 + (avgY - centerY) ** 2);
+                    const maxDistance = Math.sqrt(centerX ** 2 + centerY ** 2);
+
+                    if (distanceToCenter < maxDistance * 0.15) {
+                        detectedPosition = "Central (Near Nipple)";
+                    } else {
+                        detectedPosition = `${verticalZone} ${horizontalZone} Quadrant`;
+                    }
+                } else {
+                    detectedPosition = "No mask detected";
+                }
+                resolve();
+            };
+        });
+
+        // Stop checking after the first detected mask position
+        if (detectedPosition !== "No mask detected") {
+            break;
+        }
+    }
+
+    console.log("Detected Position:", detectedPosition);
+    return detectedPosition;
+}
+
+
+
+
+
+
+    
+        async function analyzeMessage() {
+            const messageContent = document.getElementById('messageInput').value;
+
+            const response = await fetch('http://localhost:5000/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: messageContent })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                document.getElementById('results').textContent = `Error: ${data.error}`;
+                return;
+            }
+
+            // Display similarity results
+            let resultsHtml = "Total Matches: " + data.total_matches + "\n";
+            data.results.forEach(item => {
+                resultsHtml += `${item.image_name}: ${item.similarity}%\n`;
+            });
+            document.getElementById('results').textContent = resultsHtml;
+
+            // Display image name rankings
+            let rankingHtml = "";
+            data.ranked_image_names.forEach((item, index) => {
+                rankingHtml += `<li>${index + 1}. ${item.image_name} - ${item.count} times</li>`;
+            });
+            document.getElementById('imageNameRanking').innerHTML = rankingHtml;
+        }
+  
+</script>
+
+    </body>
+    </html>
+    

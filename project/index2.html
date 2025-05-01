@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >
+  <style>
+    /* General Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      user-select: none;
+      background-size: 200% 200%;
+      animation: gradientAnimation 10s ease infinite;
+    }
+    
+    /* Particle Background */
+    #particles-js {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    
+    /* Login Container Styles */
+    .login-container, .signup-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 40px;
+      border-radius: 1000px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+      position: relative;
+      z-index: 1;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+    }
+    
+    .login-container:hover, .signup-container:hover {
+      transform: perspective(1000px) rotateY(10deg);
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Header */
+    .login-container h2, .signup-container h2 {
+      margin-bottom: 20px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    /* Input Fields */
+    .input-group {
+      position: relative;
+      margin: 20px 0;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px 12px 40px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+    
+    .input-group input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .input-group input:focus {
+      border-color: #fff;
+      outline: none;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .input-group i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 18px;
+    }
+    
+    /* Button Styles */
+    .login-container button, .signup-container button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .login-container button::before, .signup-container button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300%;
+      height: 300%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.5s ease;
+      border-radius: 50%;
+    }
+    
+    .login-container button:hover::before, .signup-container button:hover::before {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .login-container button:hover, .signup-container button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Links */
+    .login-container .forgot-password, .signup-container .forgot-password {
+      margin-top: 15px;
+      display: block;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+    
+    .login-container .forgot-password:hover, .signup-container .forgot-password:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+    
+    .login-container .signup-link, .signup-container .login-link {
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+    
+    .login-container .signup-link a, .signup-container .login-link a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    
+    .login-container .signup-link a:hover, .signup-container .login-link a:hover {
+      color: #2575fc;
+      text-decoration: underline;
+    }
+    
+    /* Gradient Animation */
+    @keyframes gradientAnimation {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    
+    /* Hide Signup Container Initially */
+    .signup-container {
+      display: none;
+    }
+    
+    /* Custom Save Button */
+    .custom-save-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease;
+    }
+    
+    .custom-save-button:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Particle Background -->
+  <div id="particles-js"></div>
+
+  <!-- Login Container -->
+  <div class="login-container">
+    <h2>Welcome Back!</h2>
+    <form id="loginForm">
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="email" placeholder="Email" required>
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="password" placeholder="Password" required>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <a href="#" class="forgot-password">Forgot Password?</a>
+    <div class="signup-link">
+      Don't have an account? <a href="#" id="showSignup">Sign up</a>
+    </div>
+  </div>
+
+  <!-- Signup Container -->
+  <div class="signup-container">
+    <h2>Create Account</h2>
+    <form id="signupForm">
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="signupEmail" placeholder="Email" required>
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="signupPassword" placeholder="Password" required>
+      </div>
+      <button type="submit">Sign Up</button>
+    </form>
+    <div class="login-link">
+      Already have an account? <a href="#" id="showLogin">Login</a>
+    </div>
+  </div>
+
+  <!-- Custom Save Button -->
+  <div class="custom-save-button" id="customSaveButton">Save Page</div>
+
+  <!-- Particle JS Library -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    // Particle JS Configuration
+    particlesJS('particles-js', {
+      particles: {
+        number: {
+          value: 80,
+          density: {
+            enable: true,
+            value_area: 800
+          }
+        },
+        color: {
+          value: '#ffffff'
+        },
+        shape: {
+          type: 'circle'
+        },
+        opacity: {
+          value: 0.5
+        },
+        size: {
+          value: 3,
+          random: true
+        },
+        line_linked: {
+          enable: true,
+          distance: 150,
+          color: '#ffffff',
+          opacity: 0.4,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 6,
+          direction: 'none',
+          out_mode: 'out'
+        }
+      },
+      interactivity: {
+        events: {
+          onhover: {
+            enable: true,
+            mode: 'repulse'
+          },
+          onclick: {
+            enable: true,
+            mode: 'push'
+          },
+          resize: true
+        }
+      },
+      retina_detect: true
+    });
+
+    // Login Form Submission using Fetch API
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      fetch('http://localhost:5000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Login successful! Redirecting...');
+          // Redirect to the next page (update the URL/path as needed)
+          window.location.href = "phase4.html";
+        } else {
+          alert(data.error || 'Invalid email or password. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again later.');
+      });
+    });
+
+    // Signup Form Submission (Demonstrative)
+    document.getElementById('signupForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+
+      // For demonstration, the signup simply sets the login form with the provided credentials.
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = password;
+      alert('Sign up successful! Your credentials have been set for login.');
+
+      // Switch back to the login view.
+      document.querySelector('.signup-container').style.display = 'none';
+      document.querySelector('.login-container').style.display = 'block';
+    });
+
+    // Toggle between Login and Signup forms
+    document.getElementById('showSignup').addEventListener('click', function(event) {
+      event.preventDefault();
+      document.querySelector('.login-container').style.display = 'none';
+      document.querySelector('.signup-container').style.display = 'block';
+    });
+
+    document.getElementById('showLogin').addEventListener('click', function(event) {
+      event.preventDefault();
+      document.querySelector('.signup-container').style.display = 'none';
+      document.querySelector('.login-container').style.display = 'block';
+    });
+
+    // Custom Save Button functionality
+    document.getElementById('customSaveButton').addEventListener('click', function() {
+      const pwd = prompt('Enter the password to save this page:');
+      if (pwd === 'asd123456789') {  // Change this as needed
+        const pageContent = document.documentElement.outerHTML;
+        const blob = new Blob([pageContent], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'page.html';
+        link.click();
+        alert('Page saved successfully!');
+      } else {
+        alert('Incorrect password. Page not saved.');
+      }
+    });
+  </script>
+</body>
+</html>

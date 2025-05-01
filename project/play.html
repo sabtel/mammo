@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stunning Video Player</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+
+        .video-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 90%;
+            max-width: 1000px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .video-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+        }
+
+        video {
+            width: 100%;
+            display: block;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .video-info {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-info h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .video-info p {
+            margin: 10px 0 0;
+            font-size: 16px;
+            color: #e0e0e0;
+            zoom: 50%;
+        }
+
+        .video-controls {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-controls button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-controls button:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .video-controls button:active {
+            transform: translateY(0);
+        }
+
+        .video-controls button i {
+            font-size: 16px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="video-container">
+        <div class="video-info">
+            <h1>how to use the ai plattform</h1>
+            <p>.</p>
+        </div>
+        <video controls poster="https://via.placeholder.com/800x450?text=Loading+Video">
+            <source src="MyRecord_20250130105905.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="video-controls">
+            <button onclick="playPause()">
+                <i class="fas fa-play"></i> Play/Pause
+            </button>
+            <button onclick="makeBig()">
+                <i class="fas fa-expand"></i> Big
+            </button>
+            <button onclick="makeSmall()">
+                <i class="fas fa-compress"></i> Small
+            </button>
+            <button onclick="makeNormal()">
+                <i class="fas fa-undo"></i> Normal
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const video = document.querySelector('video');
+
+        function playPause() {
+            if (video.paused) {
+                video.play();
+                document.querySelector('.fa-play').classList.replace('fa-play', 'fa-pause');
+            } else {
+                video.pause();
+                document.querySelector('.fa-pause').classList.replace('fa-pause', 'fa-play');
+            }
+        }
+
+        function makeBig() {
+            video.width = 1000;
+        }
+
+        function makeSmall() {
+            video.width = 500;
+        }
+
+        function makeNormal() {
+            video.width = 800;
+        }
+    </script>
+
+</body>
+</html>
